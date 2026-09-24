@@ -1,0 +1,72 @@
+x-service: &service
+  restart: unless-stopped
+  depends_on:
+    db:
+      condition: service_healthy
+  # Периодическая проверка готовности: сервис отвечает и видит свою базу данных
+  healthcheck:
+    test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:$$PORT/health/ready || exit 1"]
+    interval: 10s
+    timeout: 3s
+    retries: 3
+    start_period: 5s
+
+x-env: &env
+  JWT_SECRET: ${JWT_SECRET:-change-me-in-production-8f3a1c}
+  PG_POOL_MAX: ${PG_POOL_MAX:-10}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: parking
+      POSTGRES_PASSWORD: parking
+      POSTGRES_DB: postgres
+    volumes:
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      # проверка по TCP: во время выполнения init-скриптов сервер слушает только сокет
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "parking"]
+      interval: 2s
+      retries: 30
+
+  auth-service:
+    <<: *service
+    build: { context: ., network: host, args: { SERVICE: auth-service } }
+    environment:
+      <<: *env
+      PORT: 3001
+      DATABASE_URL: postgres://parking:parking@db:5432/auth_db
+    ports: ["3001:3001"]
+
+  clients-service:
+    <<: *service
+    build: { context: ., network: host, args: { SERVICE: clients-service } }
+    environment:
+      <<: *env
+      PORT: 3002
+      DATABASE_URL: postgres://parking:parking@db:5432/clients_db
+    ports: ["3002:3002"]
+
+  parking-service:
+    <<: *service
+    build: { context: ., network: host, args: { SERVICE: parking-service } }
+    environment:
+      <<: *env
+      PORT: 3003
+      DATABASE_URL: postgres://parking:parking@db:5432/parking_db
+      CLIENTS_SERVICE_URL: http://clients-service:3002
+    ports: ["3003:3003"]
+
+  frontend:
+    build: { context: ./frontend, network: host }
+    restart: unless-stopped
+    ports: ["8080:80"]
+    depends_on: [auth-service, clients-service, parking-service]
+
+volumes:
+  pgdata:

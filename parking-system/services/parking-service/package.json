@@ -1,0 +1,10 @@
+{
+  "name": "@parking/parking-service",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.js",
+  "dependencies": {
+    "@parking/common": "1.0.0",
+    "express": "^5.1.0"
+  }
+}
