@@ -1,0 +1,532 @@
+[
+  {
+    "name": "Средняя нагрузка",
+    "users": 10,
+    "pauseMs": 300,
+    "seconds": 20,
+    "rps": 30,
+    "operations": {
+      "Поиск владельца по номеру": {
+        "count": 82,
+        "avg_ms": 11,
+        "p95_ms": 28,
+        "errors": 0
+      },
+      "План стоянки": {
+        "count": 99,
+        "avg_ms": 14,
+        "p95_ms": 108,
+        "errors": 0
+      },
+      "Автомобили на стоянке": {
+        "count": 94,
+        "avg_ms": 11,
+        "p95_ms": 13,
+        "errors": 0
+      },
+      "Поиск стоянок по номеру": {
+        "count": 120,
+        "avg_ms": 242,
+        "p95_ms": 391,
+        "errors": 0
+      },
+      "Въезд": {
+        "count": 52,
+        "avg_ms": 19,
+        "p95_ms": 31,
+        "errors": 0
+      },
+      "Выезд с расчётом": {
+        "count": 52,
+        "avg_ms": 113,
+        "p95_ms": 174,
+        "errors": 0
+      },
+      "Оплата": {
+        "count": 52,
+        "avg_ms": 199,
+        "p95_ms": 309,
+        "errors": 0
+      },
+      "Задолженность клиента": {
+        "count": 47,
+        "avg_ms": 92,
+        "p95_ms": 160,
+        "errors": 0
+      }
+    },
+    "cpu_avg_pct": {
+      "clients-service": 3.1499999999999995,
+      "parking-service": 12.465555555555557,
+      "auth-service": 1.402222222222222,
+      "frontend": 1.3611111111111112,
+      "db": 461.5555555555556
+    },
+    "server": {
+      "auth-service": {
+        "service": "auth-service",
+        "window_s": 21,
+        "in_flight": {
+          "current": 0,
+          "max": 0
+        },
+        "memory_mb": {
+          "rss": 78,
+          "rss_peak": 78
+        },
+        "http": {},
+        "db": {
+          "SELECT": {
+            "count": 2,
+            "errors": 0,
+            "avg_ms": 7.2,
+            "p95_ms": 13.9,
+            "max_ms": 13.9,
+            "total_ms": 14
+          }
+        }
+      },
+      "clients-service": {
+        "service": "clients-service",
+        "window_s": 21,
+        "in_flight": {
+          "current": 0,
+          "max": 2
+        },
+        "memory_mb": {
+          "rss": 78,
+          "rss_peak": 78
+        },
+        "http": {
+          "GET /api/cars/by-plate/:plate": {
+            "count": 186,
+            "errors": 0,
+            "avg_ms": 2.8,
+            "p95_ms": 3.9,
+            "max_ms": 24.2,
+            "total_ms": 528
+          }
+        },
+        "db": {
+          "SELECT cars": {
+            "count": 186,
+            "errors": 0,
+            "avg_ms": 1.8,
+            "p95_ms": 2.3,
+            "max_ms": 23.2,
+            "total_ms": 333
+          },
+          "SELECT": {
+            "count": 2,
+            "errors": 0,
+            "avg_ms": 0.4,
+            "p95_ms": 0.5,
+            "max_ms": 0.5,
+            "total_ms": 1
+          }
+        }
+      },
+      "parking-service": {
+        "service": "parking-service",
+        "window_s": 21,
+        "in_flight": {
+          "current": 0,
+          "max": 9
+        },
+        "memory_mb": {
+          "rss": 103,
+          "rss_peak": 103
+        },
+        "http": {
+          "GET /api/spots": {
+            "count": 99,
+            "errors": 0,
+            "avg_ms": 3.8,
+            "p95_ms": 8.4,
+            "max_ms": 37,
+            "total_ms": 371
+          },
+          "GET /api/sessions": {
+            "count": 214,
+            "errors": 0,
+            "avg_ms": 133.6,
+            "p95_ms": 336,
+            "max_ms": 635.9,
+            "total_ms": 28582
+          },
+          "POST /api/sessions/entry": {
+            "count": 52,
+            "errors": 0,
+            "avg_ms": 13.4,
+            "p95_ms": 23.9,
+            "max_ms": 29.3,
+            "total_ms": 697
+          },
+          "POST /api/sessions/:id/exit": {
+            "count": 52,
+            "errors": 0,
+            "avg_ms": 107.9,
+            "p95_ms": 173,
+            "max_ms": 238.5,
+            "total_ms": 5610
+          },
+          "POST /api/payments": {
+            "count": 52,
+            "errors": 0,
+            "avg_ms": 191.2,
+            "p95_ms": 304.6,
+            "max_ms": 411.4,
+            "total_ms": 9942
+          },
+          "GET /api/clients/:id/debt": {
+            "count": 47,
+            "errors": 0,
+            "avg_ms": 87.6,
+            "p95_ms": 150.7,
+            "max_ms": 160.8,
+            "total_ms": 4115
+          }
+        },
+        "db": {
+          "SELECT parking_spots": {
+            "count": 151,
+            "errors": 0,
+            "avg_ms": 2.1,
+            "p95_ms": 5.1,
+            "max_ms": 35.8,
+            "total_ms": 322
+          },
+          "SELECT parking_sessions": {
+            "count": 474,
+            "errors": 0,
+            "avg_ms": 60.1,
+            "p95_ms": 293.4,
+            "max_ms": 633.3,
+            "total_ms": 28482
+          },
+          "SELECT tariffs": {
+            "count": 52,
+            "errors": 0,
+            "avg_ms": 0.7,
+            "p95_ms": 1.8,
+            "max_ms": 3.1,
+            "total_ms": 38
+          },
+          "UPDATE parking_spots": {
+            "count": 104,
+            "errors": 0,
+            "avg_ms": 0.7,
+            "p95_ms": 1.3,
+            "max_ms": 5,
+            "total_ms": 70
+          },
+          "INSERT parking_sessions": {
+            "count": 52,
+            "errors": 0,
+            "avg_ms": 1.1,
+            "p95_ms": 2.4,
+            "max_ms": 2.5,
+            "total_ms": 57
+          },
+          "SELECT session_balances": {
+            "count": 203,
+            "errors": 0,
+            "avg_ms": 89.5,
+            "p95_ms": 146.2,
+            "max_ms": 247.1,
+            "total_ms": 18172
+          },
+          "UPDATE parking_sessions": {
+            "count": 373,
+            "errors": 0,
+            "avg_ms": 0.8,
+            "p95_ms": 1.6,
+            "max_ms": 8.9,
+            "total_ms": 296
+          },
+          "INSERT payments": {
+            "count": 321,
+            "errors": 0,
+            "avg_ms": 0.7,
+            "p95_ms": 1.2,
+            "max_ms": 3.4,
+            "total_ms": 223
+          },
+          "SELECT": {
+            "count": 2,
+            "errors": 0,
+            "avg_ms": 0.5,
+            "p95_ms": 0.6,
+            "max_ms": 0.6,
+            "total_ms": 1
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "Пиковая нагрузка",
+    "users": 50,
+    "pauseMs": 0,
+    "seconds": 20,
+    "rps": 105,
+    "operations": {
+      "Поиск владельца по номеру": {
+        "count": 249,
+        "avg_ms": 14,
+        "p95_ms": 27,
+        "errors": 0
+      },
+      "Автомобили на стоянке": {
+        "count": 362,
+        "avg_ms": 421,
+        "p95_ms": 850,
+        "errors": 0
+      },
+      "План стоянки": {
+        "count": 353,
+        "avg_ms": 416,
+        "p95_ms": 872,
+        "errors": 0
+      },
+      "Въезд": {
+        "count": 173,
+        "avg_ms": 429,
+        "p95_ms": 868,
+        "errors": 0
+      },
+      "Задолженность клиента": {
+        "count": 190,
+        "avg_ms": 503,
+        "p95_ms": 975,
+        "errors": 0
+      },
+      "Поиск стоянок по номеру": {
+        "count": 427,
+        "avg_ms": 707,
+        "p95_ms": 1325,
+        "errors": 0
+      },
+      "Выезд с расчётом": {
+        "count": 173,
+        "avg_ms": 849,
+        "p95_ms": 1371,
+        "errors": 0
+      },
+      "Оплата": {
+        "count": 173,
+        "avg_ms": 534,
+        "p95_ms": 673,
+        "errors": 0
+      }
+    },
+    "cpu_avg_pct": {
+      "clients-service": 4.594444444444444,
+      "parking-service": 21.723333333333333,
+      "auth-service": 0.017777777777777778,
+      "frontend": 2.611111111111111,
+      "db": 1096.8144444444447
+    },
+    "server": {
+      "auth-service": {
+        "service": "auth-service",
+        "window_s": 21,
+        "in_flight": {
+          "current": 0,
+          "max": 0
+        },
+        "memory_mb": {
+          "rss": 78,
+          "rss_peak": 78
+        },
+        "http": {},
+        "db": {
+          "SELECT": {
+            "count": 2,
+            "errors": 0,
+            "avg_ms": 16.9,
+            "p95_ms": 17.9,
+            "max_ms": 17.9,
+            "total_ms": 34
+          }
+        }
+      },
+      "clients-service": {
+        "service": "clients-service",
+        "window_s": 21,
+        "in_flight": {
+          "current": 0,
+          "max": 4
+        },
+        "memory_mb": {
+          "rss": 79,
+          "rss_peak": 79
+        },
+        "http": {
+          "GET /api/cars/by-plate/:plate": {
+            "count": 595,
+            "errors": 0,
+            "avg_ms": 2.8,
+            "p95_ms": 6.2,
+            "max_ms": 73.5,
+            "total_ms": 1683
+          }
+        },
+        "db": {
+          "SELECT cars": {
+            "count": 595,
+            "errors": 0,
+            "avg_ms": 2.1,
+            "p95_ms": 5.1,
+            "max_ms": 72.7,
+            "total_ms": 1259
+          },
+          "SELECT": {
+            "count": 2,
+            "errors": 0,
+            "avg_ms": 1,
+            "p95_ms": 1.4,
+            "max_ms": 1.4,
+            "total_ms": 2
+          }
+        }
+      },
+      "parking-service": {
+        "service": "parking-service",
+        "window_s": 21,
+        "in_flight": {
+          "current": 0,
+          "max": 50
+        },
+        "memory_mb": {
+          "rss": 147,
+          "rss_peak": 147
+        },
+        "http": {
+          "GET /api/sessions": {
+            "count": 789,
+            "errors": 0,
+            "avg_ms": 566.2,
+            "p95_ms": 1023.6,
+            "max_ms": 2108.4,
+            "total_ms": 446758
+          },
+          "GET /api/spots": {
+            "count": 353,
+            "errors": 0,
+            "avg_ms": 403.8,
+            "p95_ms": 854.1,
+            "max_ms": 1107.6,
+            "total_ms": 142548
+          },
+          "POST /api/sessions/entry": {
+            "count": 173,
+            "errors": 0,
+            "avg_ms": 419.6,
+            "p95_ms": 859.1,
+            "max_ms": 1229.3,
+            "total_ms": 72593
+          },
+          "GET /api/clients/:id/debt": {
+            "count": 190,
+            "errors": 0,
+            "avg_ms": 489,
+            "p95_ms": 950.7,
+            "max_ms": 1162.3,
+            "total_ms": 92919
+          },
+          "POST /api/sessions/:id/exit": {
+            "count": 173,
+            "errors": 0,
+            "avg_ms": 842.5,
+            "p95_ms": 1357.6,
+            "max_ms": 1970.5,
+            "total_ms": 145750
+          },
+          "POST /api/payments": {
+            "count": 173,
+            "errors": 0,
+            "avg_ms": 528.8,
+            "p95_ms": 668,
+            "max_ms": 1261.2,
+            "total_ms": 91475
+          }
+        },
+        "db": {
+          "SELECT parking_sessions": {
+            "count": 1654,
+            "errors": 0,
+            "avg_ms": 308.7,
+            "p95_ms": 870.9,
+            "max_ms": 2106.6,
+            "total_ms": 510644
+          },
+          "SELECT parking_spots": {
+            "count": 526,
+            "errors": 0,
+            "avg_ms": 270.8,
+            "p95_ms": 720.8,
+            "max_ms": 1106.6,
+            "total_ms": 142424
+          },
+          "SELECT tariffs": {
+            "count": 173,
+            "errors": 0,
+            "avg_ms": 0.8,
+            "p95_ms": 2.5,
+            "max_ms": 5.2,
+            "total_ms": 140
+          },
+          "UPDATE parking_spots": {
+            "count": 346,
+            "errors": 0,
+            "avg_ms": 0.8,
+            "p95_ms": 3,
+            "max_ms": 7.7,
+            "total_ms": 262
+          },
+          "INSERT parking_sessions": {
+            "count": 173,
+            "errors": 0,
+            "avg_ms": 1,
+            "p95_ms": 2.4,
+            "max_ms": 6.9,
+            "total_ms": 175
+          },
+          "SELECT session_balances": {
+            "count": 709,
+            "errors": 0,
+            "avg_ms": 190.5,
+            "p95_ms": 535.6,
+            "max_ms": 1160.9,
+            "total_ms": 135087
+          },
+          "UPDATE parking_sessions": {
+            "count": 1242,
+            "errors": 0,
+            "avg_ms": 0.8,
+            "p95_ms": 2.5,
+            "max_ms": 13.3,
+            "total_ms": 974
+          },
+          "INSERT payments": {
+            "count": 1069,
+            "errors": 0,
+            "avg_ms": 0.8,
+            "p95_ms": 2.5,
+            "max_ms": 9.9,
+            "total_ms": 821
+          },
+          "SELECT": {
+            "count": 2,
+            "errors": 0,
+            "avg_ms": 353.5,
+            "p95_ms": 399.5,
+            "max_ms": 399.5,
+            "total_ms": 707
+          }
+        }
+      }
+    }
+  }
+]

@@ -4,3 +4,4 @@ db
 scripts
 *.md
 frontend
+tests

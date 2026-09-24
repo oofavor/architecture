@@ -1,20 +1,18 @@
 x-service: &service
   restart: unless-stopped
+  init: true   # корректная обработка сигналов остановки (Node.js как PID 1 их игнорирует)
   depends_on:
     db:
       condition: service_healthy
-  # Периодическая проверка готовности: сервис отвечает и видит свою базу данных
+  # Проверка доступности: сервис отвечает и видит свою базу данных
   healthcheck:
-    test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:$$PORT/health/ready || exit 1"]
+    test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:$$PORT/health || exit 1"]
     interval: 10s
     timeout: 3s
     retries: 3
-    start_period: 5s
 
 x-env: &env
   JWT_SECRET: ${JWT_SECRET:-change-me-in-production-8f3a1c}
-  PG_POOL_MAX: ${PG_POOL_MAX:-10}
-  LOG_LEVEL: ${LOG_LEVEL:-info}
 
 services:
   db:
@@ -26,10 +24,9 @@ services:
     volumes:
       - ./db/init:/docker-entrypoint-initdb.d:ro
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
+    ports: ["5433:5432"]
     healthcheck:
-      # проверка по TCP: во время выполнения init-скриптов сервер слушает только сокет
+      # по TCP: во время выполнения init-скриптов сервер слушает только сокет
       test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "parking"]
       interval: 2s
       retries: 30

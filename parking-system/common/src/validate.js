@@ -4,36 +4,29 @@ const { HttpError } = require('./errors');
 
 const CHECKS = {
   string: (v) => typeof v === 'string' && v.trim() !== '',
-  integer: (v) => Number.isInteger(v),
+  integer: Number.isInteger,
   number: (v) => typeof v === 'number' && Number.isFinite(v),
   boolean: (v) => typeof v === 'boolean',
   datetime: (v) => typeof v === 'string' && !Number.isNaN(Date.parse(v)),
 };
 
 /**
- * Отбирает из тела запроса только описанные в схеме поля и проверяет их типы.
- * schema: { field: { type, required?, nullable?, enum? } }
- * partial = true — для обновления (обязательность не проверяется).
+ * Оставляет из тела запроса только поля схемы и проверяет их типы.
+ * schema: { поле: { type, required?, enum? } }; partial — для обновления.
  */
 function validate(body, schema, { partial = false } = {}) {
   const data = {};
   for (const [field, rule] of Object.entries(schema)) {
     const value = body?.[field];
-    if (value === undefined) {
+    if (value === undefined || value === null) {
       if (rule.required && !partial) throw new HttpError(400, `Поле «${field}» обязательно`);
       continue;
     }
-    if (value === null && rule.nullable) {
-      data[field] = null;
-      continue;
-    }
     if (!CHECKS[rule.type](value)) throw new HttpError(400, `Поле «${field}» должно иметь тип ${rule.type}`);
-    if (rule.enum && !rule.enum.includes(value)) {
-      throw new HttpError(400, `Поле «${field}» допускает значения: ${rule.enum.join(', ')}`);
-    }
+    if (rule.enum && !rule.enum.includes(value)) throw new HttpError(400, `Поле «${field}»: допустимо ${rule.enum.join(', ')}`);
     data[field] = value;
   }
-  if (Object.keys(data).length === 0) throw new HttpError(400, 'Нет данных для сохранения');
+  if (!Object.keys(data).length) throw new HttpError(400, 'Нет данных для сохранения');
   return data;
 }
 

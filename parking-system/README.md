@@ -1,58 +1,31 @@
-# АИС «Автостоянка» — прототип (ЛР №2)
+# АИС «Автостоянка» — прототип (ЛР № 2–3)
 
-Три микросервиса на Node.js (Express 5), PostgreSQL 15, база данных на каждый сервис, JWT.
-Веб-интерфейс на React 19 (Vite) раздаётся nginx, который проксирует /api/* к сервисам.
+Три микросервиса на Node.js (Express), у каждого своя база в PostgreSQL 15; REST + JWT; веб-интерфейс на React за nginx.
 
-| Сервис | Порт | База | Ресурсы |
-|---|---|---|---|
-| auth-service | 3001 | auth_db | `/api/auth/login`, `/api/auth/me`, `/api/users` |
-| clients-service | 3002 | clients_db | `/api/clients`, `/api/cars`, `/api/cars/by-plate/:plate`, `/api/discounts` |
-| frontend | 8080 | — | веб-интерфейс, прокси /api/* |
-| parking-service | 3003 | parking_db | `/api/spots`, `/api/tariffs`, `/api/sessions` (+`/entry`, `/:id/exit`), `/api/payments`, `/api/clients/:id/debt`, `/api/my/sessions` |
+| Сервис | Порт | Что делает |
+|---|---|---|
+| auth-service | 3001 | вход (JWT), пользователи |
+| clients-service | 3002 | клиенты, автомобили |
+| parking-service | 3003 | места, тарифы, въезд/выезд, оплата, долг |
+| frontend | 8080 | интерфейс, прокси `/api/*` |
 
-Подробное описание кода и принятых решений: [CODEBASE_GUIDE.md](CODEBASE_GUIDE.md).
-
-## Запуск
+Пользователи: `admin / admin123`, `operator / operator123`.
 
 ```bash
-docker compose up -d --build   # PostgreSQL + 3 сервиса + веб-интерфейс, схема и тестовые данные из db/init
-# веб-интерфейс: http://localhost:8080
-npm install && npm test        # модульные тесты расчёта стоимости
-npm run demo                   # сценарий из 42 шагов (CRUD, безопасность, пример из ЛР №1)
-docker compose down -v         # остановить и удалить данные (демо рассчитано на «чистую» БД)
+docker compose down -v && docker compose up -d --build   # чистый запуск (≈1 мин), интерфейс: http://localhost:8080
+npm install
+npm run demo               # ЛР 2: сценарий из 16 шагов (только на чистой базе)
+npm test                   # ЛР 3: 15 модульных тестов
+npm run test:integration   # ЛР 3: 13 интеграционных тестов (нужны запущенные контейнеры)
+
+# ЛР 3: нагрузочный тест на 500 000 записей
+docker compose exec -T db psql -q -U parking -d postgres < scripts/volume.sql
+npm run load               # результат: results/load.json
+
+curl localhost:3003/health          # проверка доступности
+curl localhost:3003/metrics         # метрики
+docker compose logs parking-service # журнал (JSON)
 ```
 
-Тестовые пользователи: `admin/admin123` (ADMIN), `operator/operator123` (OPERATOR), `petrov/client123` (CLIENT).
-
-Пример вызова:
-
-```bash
-TOKEN=$(curl -s localhost:3001/api/auth/login -H 'Content-Type: application/json' \
-  -d '{"login":"operator","password":"operator123"}' | node -pe 'JSON.parse(require("fs").readFileSync(0)).token')
-curl -s localhost:3002/api/clients -H "Authorization: Bearer $TOKEN"
-```
-
-## Разработка интерфейса
-
-```bash
-cd frontend && npm install && npm run dev   # http://localhost:5173, /api проксируется на порты 3001–3003
-```
-
-## Тестирование и наблюдение (ЛР № 3)
-
-```bash
-npm run test:unit          # 49 модульных тестов (без Docker и БД)
-npm run test:coverage      # то же + покрытие кода
-npm run test:integration   # 53 интеграционных теста против запущенных контейнеров (повторяемые)
-
-# Нагрузочное тестирование на объёме ЛР № 1 (500 000 стоянок)
-docker compose exec -T db psql -U parking -d clients_db < scripts/volume/clients_db.sql
-docker compose exec -T db psql -U parking -d parking_db < scripts/volume/parking_db.sql
-node scripts/load.mjs <метка>   # результат: results/<метка>.json
-
-curl localhost:3003/metrics       # метрики сервиса (JSON); POST /metrics/reset — новое окно
-curl localhost:3003/health/ready  # готовность (БД доступна) — 200 / 503
-docker compose logs -f parking-service   # журнал: одна строка JSON на событие, поле requestId
-```
-
-`results/baseline.json` — измерение на схеме ЛР № 2, `results/optimized.json` — после индексов `db/init/05-performance.sql`.
+Структура: `common/` — общая библиотека (JWT, CRUD-фабрика, журнал, метрики), `services/*/src` — сервисы,
+`db/init` — схема и тестовые данные, `frontend/` — интерфейс, `tests/` — тесты, `scripts/` — демо и нагрузка.

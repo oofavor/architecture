@@ -1,72 +1,45 @@
 'use strict';
 
 const { Pool, types } = require('pg');
-const { logger } = require('./logger');
 const { metrics } = require('./metrics');
+const { log } = require('./logger');
 
-// NUMERIC возвращаем числом, а не строкой (суммы в прототипе не превышают точности double)
+// NUMERIC возвращаем числом (суммы в прототипе не превышают точности double)
 types.setTypeParser(types.builtins.NUMERIC, parseFloat);
 
-const SLOW_QUERY_MS = Number(process.env.SLOW_QUERY_MS ?? 200);
-
-// Метка запроса для метрик: «операция таблица», например «SELECT parking_sessions»
-function queryLabel(text) {
-  const sql = (typeof text === 'string' ? text : text?.text ?? '').trim();
-  const op = sql.split(/\s+/)[0]?.toUpperCase() ?? '?';
-  if (['BEGIN', 'COMMIT', 'ROLLBACK'].includes(op)) return op;
+// Метка запроса для метрик: «SELECT parking_sessions»
+function queryLabel(sql) {
+  const op = sql.trim().split(/\s+/)[0].toUpperCase();
   const table = sql.match(/\b(?:FROM|INTO|UPDATE)\s+([a-z_]+)/i)?.[1];
-  return table ? `${op} ${table}` : sql.replace(/\s+/g, ' ').slice(0, 30);
+  return table ? `${op} ${table}` : op;
 }
 
-// Оборачивает client.query: замер времени, метрики, журнал медленных запросов
-function instrument(client) {
-  if (client.instrumented) return;
-  client.instrumented = true;
-  const original = client.query.bind(client);
-
-  client.query = (...args) => {
-    const started = process.hrtime.bigint();
-    const label = queryLabel(args[0]);
-    metrics.samplePool();
-    const done = (err) => {
-      const ms = Number(process.hrtime.bigint() - started) / 1e6;
-      metrics.observeDb(label, ms, Boolean(err));
-      if (ms >= SLOW_QUERY_MS) {
-        logger.warn('slow_query', { query: label, duration_ms: Math.round(ms), sql: String(args[0]?.text ?? args[0]).replace(/\s+/g, ' ').slice(0, 200) });
-      }
-    };
-
-    const last = args[args.length - 1];
-    if (typeof last === 'function') {
-      // Вызов с callback (так pool.query обращается к клиенту внутри pg)
-      args[args.length - 1] = (err, res) => { done(err); last(err, res); };
-      return original(...args);
-    }
-    const result = original(...args);
-    if (result && typeof result.then === 'function') {
-      result.then(() => done(null), (err) => done(err));
-    }
-    return result;
-  };
+// Выполняет запрос с замером времени; медленные запросы попадают в журнал
+async function timed(run, sql, params) {
+  const started = performance.now();
+  try {
+    return await run(sql, params);
+  } finally {
+    const ms = performance.now() - started;
+    metrics.dbQuery(queryLabel(sql), ms);
+    if (ms > 200) log('warn', 'slow_query', { query: queryLabel(sql), duration_ms: Math.round(ms) });
+  }
 }
 
 function createPool() {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    max: Number(process.env.PG_POOL_MAX ?? 10),
-  });
-  pool.on('connect', instrument);
-  pool.on('error', (err) => logger.error('db_pool_error', { message: err.message }));
-  metrics.trackPool(pool);
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const query = pool.query.bind(pool);
+  pool.query = (sql, params) => timed(query, sql, params);
   return pool;
 }
 
-// Выполнение функции в транзакции
+// Выполнение функции в транзакции; fn получает объект с методом query
 async function withTransaction(pool, fn) {
   const client = await pool.connect();
+  const db = { query: (sql, params) => timed(client.query.bind(client), sql, params) };
   try {
     await client.query('BEGIN');
-    const result = await fn(client);
+    const result = await fn(db);
     await client.query('COMMIT');
     return result;
   } catch (err) {

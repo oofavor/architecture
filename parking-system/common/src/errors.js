@@ -1,6 +1,6 @@
 'use strict';
 
-const { logger } = require('./logger');
+const { log } = require('./logger');
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -9,34 +9,25 @@ class HttpError extends Error {
   }
 }
 
-// Коды ошибок PostgreSQL, которые являются ошибками клиента, а не сервера
+// Ошибки PostgreSQL, которые являются ошибками клиента
 const PG_ERRORS = {
-  '23505': [409, 'Запись с такими данными уже существует'],
-  '23503': [409, 'Нарушение ссылочной целостности'],
-  '23514': [400, 'Значение не удовлетворяет ограничениям'],
+  23505: [409, 'Запись с такими данными уже существует'],
+  23503: [409, 'Нарушение ссылочной целостности'],
+  23514: [400, 'Значение не удовлетворяет ограничениям'],
   '22P02': [400, 'Некорректный формат значения'],
 };
 
-// Единый обработчик ошибок для всех сервисов
+// Единый обработчик ошибок всех сервисов
 function errorHandler(err, req, res, next) {
-  const pg = PG_ERRORS[err.code];
-  if (pg) {
-    logger.warn('request_rejected', { status: pg[0], reason: pg[1], pg_code: err.code, detail: err.detail });
-    return res.status(pg[0]).json({ error: pg[1], detail: err.detail });
-  }
-
-  // Некорректный JSON в теле запроса
-  if (err.type === 'entity.parse.failed') {
-    return res.status(400).json({ error: 'Некорректный JSON в теле запроса' });
-  }
-
-  const status = err.status || 500;
+  let [status, message] = PG_ERRORS[err.code] ?? [err.status ?? 500, err.message];
+  if (err.type === 'entity.parse.failed') message = 'Некорректный JSON в теле запроса';
   if (status === 500) {
-    logger.error('unhandled_error', { message: err.message, stack: err.stack });
-  } else if (status !== 401 && status !== 404) {
-    logger.warn('request_rejected', { status, reason: err.message });
+    log('error', 'error', { requestId: req.id, message: err.message, stack: err.stack });
+    message = 'Внутренняя ошибка сервера';
+  } else {
+    log('warn', 'request_rejected', { requestId: req.id, status, reason: message });
   }
-  res.status(status).json({ error: status === 500 ? 'Внутренняя ошибка сервера' : err.message });
+  res.status(status).json({ error: message });
 }
 
 module.exports = { HttpError, errorHandler };

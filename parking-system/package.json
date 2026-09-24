@@ -2,16 +2,15 @@
   "name": "parking-system",
   "version": "1.0.0",
   "private": true,
-  "description": "Прототип АИС «Автостоянка» (ЛР №2): микросервисы auth, clients, parking",
+  "description": "Прототип АИС «Автостоянка»: микросервисы auth, clients, parking",
   "workspaces": [
     "common",
     "services/*"
   ],
   "scripts": {
-    "test": "npm run test:unit",
-    "test:unit": "node --import ./tests/setup-unit.mjs --test \"common/test/*.test.js\" \"services/*/test/*.test.js\"",
-    "test:coverage": "node --import ./tests/setup-unit.mjs --test --experimental-test-coverage --test-coverage-exclude=\"**/test/**\" --test-coverage-exclude=\"tests/**\" \"common/test/*.test.js\" \"services/*/test/*.test.js\"",
+    "test": "LOG_LEVEL=silent JWT_SECRET=test node --test \"tests/unit/*.test.js\"",
     "test:integration": "node --test --test-concurrency=1 \"tests/integration/*.test.mjs\"",
-    "demo": "node scripts/demo.mjs"
+    "demo": "node scripts/demo.mjs",
+    "load": "node scripts/load.mjs"
   }
 }
